@@ -104,3 +104,21 @@ def main():
         clock.tick(60)
 
     pygame.quit()
+
+    
+    
+Notes:
+    
+    
+    have main function
+
+make config file for the boring stuff (screen size + linking drawings of sprites to pygame)
+
+make classes: 1 for player, enemies, bush, and powerups
+
+classes inherits from pygame Sprite
+
+Screen.blit
+
+
+pygame. Sprite group
