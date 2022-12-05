@@ -11,6 +11,8 @@ def min(a, b):
 
 PLAYER_COLOR = (0, 0, 0)
 SURFACE_COLOR = (167, 255, 100)
+GUARD_COLOR = (255, 0, 0)
+BUSH_COLOR = (0, 255, 0)
 WIDTH = 500
 HEIGHT = 500
 
@@ -75,30 +77,60 @@ class Popwerup(pygame.sprite.Sprite):
        self.rect = self.image.get_rect()
 
 def main():
-    level = 1
     pygame.init()
+    level = 1
     size = (WIDTH, HEIGHT)
     screen = pygame.display.set_mode(size)
     pygame.display.set_caption("Level: %i", level)
 
     all_sprites_list = pygame.sprite.Group()
 
-    player = Player(PLAYER_COLOR, 10, 10)
+    player = Player(PLAYER_COLOR, 10, 10, 1, False)
+    guard1 = Guard(GUARD_COLOR, 10, 10, False, 0)
+    
     player.rect.x = 450
     player.rect.y = 450
+    
+    guard1.rect.x = random.randint(100, 400)
+    guard1.rect.y = random.randint(100, 400)
 
     all_sprites_list.add(player)
+    all_sprites_list.add(guard1)
+   
+    
+    screen.fill(SURFACE_COLOR)
 
-    exit = True
+    running = True
     clock = pygame.time.Clock()
 
-    while exit:
+    while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                exit = False
+                running = False
+            elif event.type == pygame.K_w and player_rect.y < 500:
+                player_rect.y += 1
+            elif event.type == pygame.K_s and player_rect.y > 0:
+                player_rect.y -= 1
+            elif event.type == pygame.K_d and player_rect.x < 500:
+                player_rect.x += 1
+            elif event.type == pygame.K_a and player_rect.x > 0:
+                player_rect.x -= 1
+            elif event.type == pygame.K_UP and player_rect.y < 470 and info_list[1][2] > 0:
+                player_rect.y += 30
+                info_list[1][2] -= 1
+            elif event.type == pygame.K_DOWN and player_rect.y > 30 and info_list[1][2] > 0:
+                player_rect.y -= 30
+                info_list[1][2] -= 1
+            elif event.type == pygame.K_RIGHT and player_rect.x < 470 and info_list[1][2] > 0:
+                player_rect.x += 30
+                info_list[1][2] -= 1
+            elif event.type == pygame.K_LEFT and player_rect.x > 30 and info_list[1][2] > 0:
+                player_rect.x -= 30
+                info_list[1][2] -= 1
+            else:
+                player_rect.x += 0
 
         all_sprites_list.update()
-        screen.fill(SURFACE_COLOR)
         all_sprites_list.draw(screen)
         pygame.display.flip()
         clock.tick(60)
