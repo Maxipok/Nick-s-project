@@ -283,3 +283,89 @@ while running:
     pygame.display.update()
 
 pygame.quit()
+
+
+
+CONFIG FILE:
+    
+    import pygame
+
+# Global screen variables
+SCREEN_WIDTH = 1280
+SCREEN_HEIGHT = 720
+SCREEN_SIZE = (SCREEN_WIDTH, SCREEN_HEIGHT)
+
+POWERUP_SIZE = 75
+CHARACTER_SIZE = 50
+GUARD_SIZE = 40
+BUSH_SIZE = 150
+FPS = 1
+
+PLAYER = pygame.transform.scale(pygame.image.load("images/player.png"), (CHARACTER_SIZE, CHARACTER_SIZE))
+PLAYER_NIPPED = pygame.transform.scale(pygame.image.load("images/nipped.png"), (CHARACTER_SIZE, CHARACTER_SIZE))
+PLAYER_JUGGED = pygame.transform.scale(pygame.image.load("images/jugged.png"), (CHARACTER_SIZE, CHARACTER_SIZE))
+GUARD = pygame.transform.scale(pygame.image.load("images/guard.png"), (GUARD_SIZE, GUARD_SIZE))
+BUSH = pygame.transform.scale(pygame.image.load("images/bush.png"), (BUSH_SIZE, BUSH_SIZE))
+FIRENIP = pygame.transform.scale(pygame.image.load("images/firenip.png"), (POWERUP_SIZE, POWERUP_SIZE))
+FIREJUG = pygame.transform.scale(pygame.image.load("images/firejug.png"), (POWERUP_SIZE, POWERUP_SIZE))
+BACKGROUND = pygame.image.load("images/tile_background.png")
+PORTAL = pygame.image.load("images/portal.png")
+
+
+
+CLASSES FILE:
+    import pygame
+from config import *
+
+class Player(pygame.sprite.Sprite):
+    # Constructor. Pass in the color of the block,
+    # and its x and y position
+    def __init__(self, image, speed, jugged):
+       # Call the parent class (Sprite) constructor
+       pygame.sprite.Sprite.__init__(self)
+       # Create an image of the block, and fill it with a color.
+       # This could also be an image loaded from the disk.
+       self.image = image
+       self.speed = speed
+       self.jugged = jugged
+
+       # Fetch the rectangle object that has the dimensions of the image
+       # Update the position of this object by setting the values of rect.x and rect.y
+       self.rect = self.image.get_rect()
+
+class Guard(pygame.sprite.Sprite):
+    def __init__(self, image, bounces):
+       pygame.sprite.Sprite.__init__(self)
+       self.image = image
+
+       self.rect = self.image.get_rect()
+       self.bounces = bounces
+
+class Bush(pygame.sprite.Sprite):
+    # Constructor. Pass in the color of the block,
+    # and its x and y position
+    def __init__(self, image):
+       # Call the parent class (Sprite) constructor
+       pygame.sprite.Sprite.__init__(self)
+       # Create an image of the block, and fill it with a color.
+       # This could also be an image loaded from the disk.
+       self.image = image
+
+       # Fetch the rectangle object that has the dimensions of the image
+       # Update the position of this object by setting the values of rect.x and rect.y
+       self.rect = self.image.get_rect()
+
+class Powerup(pygame.sprite.Sprite):
+    # Constructor. Pass in the color of the block,
+    # and its x and y position
+    def __init__(self, image, type):
+       # Call the parent class (Sprite) constructor
+       pygame.sprite.Sprite.__init__(self)
+       # Create an image of the block, and fill it with a color.
+       # This could also be an image loaded from the disk.
+       self.image = image
+       self.type = type
+
+       # Fetch the rectangle object that has the dimensions of the image
+       # Update the position of this object by setting the values of rect.x and rect.y
+       self.rect = self.image.get_rect()
