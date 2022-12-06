@@ -3,17 +3,13 @@ from pygame.locals import *
 import numpy
 import random
 import time
+from config import *
+from classes import *
 
 pygame.init()
 
 
-PLAYER_COLOR = (0, 0, 0)
 SURFACE_COLOR = (167, 255, 100)
-GUARD_COLOR = (255, 0, 0)
-BUSH_COLOR = (0, 255, 0)
-NIP_COLOR = (150, 90, 0)
-JUG_COLOR = (255, 150, 0)
-FIRELORD_COLOR = (255, 150, 0)
 WIDTH = 500
 HEIGHT = 500
 
@@ -23,62 +19,7 @@ def min(a, b):
     else:
         return b
 
-class Player(pygame.sprite.Sprite):
-    # Constructor. Pass in the color of the block,
-    # and its x and y position
-    def __init__(self, color, width, height, speed, jugged):
-       # Call the parent class (Sprite) constructor
-       pygame.sprite.Sprite.__init__(self)
-       # Create an image of the block, and fill it with a color.
-       # This could also be an image loaded from the disk.
-       self.image = pygame.Surface([width, height])
-       self.image.fill(color)
-       self.speed = speed
-       self.jugged = jugged
 
-       # Fetch the rectangle object that has the dimensions of the image
-       # Update the position of this object by setting the values of rect.x and rect.y
-       self.rect = self.image.get_rect()
-
-class Guard(pygame.sprite.Sprite):
-    def __init__(self, color, width, height, bounces):
-       pygame.sprite.Sprite.__init__(self)
-       self.image = pygame.Surface([width, height])
-       self.image.fill(color)
-
-       self.rect = self.image.get_rect()
-       self.bounces = bounces
-
-class Bush(pygame.sprite.Sprite):
-    # Constructor. Pass in the color of the block,
-    # and its x and y position
-    def __init__(self, color, width, height):
-       # Call the parent class (Sprite) constructor
-       pygame.sprite.Sprite.__init__(self)
-       # Create an image of the block, and fill it with a color.
-       # This could also be an image loaded from the disk.
-       self.image = pygame.Surface([width, height])
-       self.image.fill(color)
-
-       # Fetch the rectangle object that has the dimensions of the image
-       # Update the position of this object by setting the values of rect.x and rect.y
-       self.rect = self.image.get_rect()
-
-class Popwerup(pygame.sprite.Sprite):
-    # Constructor. Pass in the color of the block,
-    # and its x and y position
-    def __init__(self, color, width, height, type):
-       # Call the parent class (Sprite) constructor
-       pygame.sprite.Sprite.__init__(self)
-       # Create an image of the block, and fill it with a color.
-       # This could also be an image loaded from the disk.
-       self.image = pygame.Surface([width, height])
-       self.image.fill(color)
-       self.type = type
-
-       # Fetch the rectangle object that has the dimensions of the image
-       # Update the position of this object by setting the values of rect.x and rect.y
-       self.rect = self.image.get_rect()
 
 jumps = 1
 
@@ -92,7 +33,7 @@ size = (WIDTH, HEIGHT)
 
 clock = pygame.time.Clock()
 
-screen = pygame.display.set_mode(size)
+screen = pygame.display.set_mode(SCREEN_SIZE)
 
 time = 0
 
@@ -105,15 +46,15 @@ bushes_list = pygame.sprite.Group()
 
 powerups_list = pygame.sprite.Group()
 
-player = Player(PLAYER_COLOR, 10, 10, 3, False)
+player = Player(PLAYER, 3, False)
 
 for i in range(3):
     if i < 2:
-        guard = Guard(GUARD_COLOR, 10, 10, 0)
+        guard = Guard(GUARD, 0)
         guard.rect.x = random.randint(200, 350)
         guard.rect.y = random.randint(200, 350)
     else:
-        guard = Guard(GUARD_COLOR, 10, 10, 0)
+        guard = Guard(GUARD, 0)
         guard.rect.x = random.randint(50, 200)
         guard.rect.y = random.randint(50, 200)
     guards_list.add(guard)
@@ -121,17 +62,17 @@ for i in range(3):
 
 for i in range(2):
     if i == 0:
-        powerup = Popwerup(NIP_COLOR, 20, 20, "nip")
+        powerup = Popwerup(FIRENIP, "nip")
         powerup.rect.x = random.randint(200, 350)
         powerup.rect.y = random.randint(200, 350)
     else:
-        powerup = Popwerup(JUG_COLOR, 20, 20, "jug")
+        powerup = Popwerup(FIREJUG, "jug")
         powerup.rect.x = random.randint(50, 200)
         powerup.rect.y = random.randint(50, 200)
     powerups_list.add(powerup)
     all_sprites_list.add(powerup)
 
-bush1 = Bush(BUSH_COLOR, 30, 30)
+bush1 = Bush(BUSH)
 
 
 player.rect.x = 450
@@ -163,7 +104,7 @@ while running:
     time += 1
     jug_time += 1
     
-    screen.fill(SURFACE_COLOR)
+    screen.blit(BACKGROUND, (0, 0))
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
@@ -278,8 +219,9 @@ while running:
         player.jugged = False
 
     if player.jugged:
-        player.image = pygame.Surface([10, 10])
-        player.image.fill(FIRELORD_COLOR)
+        player.image = PLAYER_JUGGED
+    else:
+        player.image = PLAYER
 
     if player.rect.x < 50 and player.rect.y < 50:
         player.rect.x = 450
@@ -302,7 +244,7 @@ while running:
             pygame.sprite.Sprite.kill(powerup)
 
         for i in range(min(level, 3)):
-            bush = Bush(BUSH_COLOR, 30, 30)
+            bush = Bush(BUSH)
             bush.rect.x = random.randint(50, 350)
             bush.rect.y = random.randint(50, 350)
             all_sprites_list.add(bush)
@@ -310,11 +252,11 @@ while running:
 
         for i in range(level + 2):
             if i < (level + 3)/2:
-                guard = Guard(GUARD_COLOR, 10, 10, 0)
+                guard = Guard(GUARD, 0)
                 guard.rect.x = random.randint(200, 350)
                 guard.rect.y = random.randint(200, 350)
             else:
-                guard = Guard(GUARD_COLOR, 10, 10, 0)
+                guard = Guard(GUARD, 0)
                 guard.rect.x = random.randint(50, 200)
                 guard.rect.y = random.randint(50, 200)
             guards_list.add(guard)
@@ -322,18 +264,18 @@ while running:
 
         for i in range(2):
             if i == 0:
-                powerup = Popwerup(NIP_COLOR, 20, 20, "nip")
+                powerup = Popwerup(FIRENIP, "nip")
                 powerup.rect.x = random.randint(200, 350)
                 powerup.rect.y = random.randint(200, 350)
             else:
-                powerup = Popwerup(JUG_COLOR, 20, 20, "jug")
+                powerup = Popwerup(FIREJUG, "jug")
                 powerup.rect.x = random.randint(50, 200)
                 powerup.rect.y = random.randint(50, 200)
             powerups_list.add(powerup)
             all_sprites_list.add(powerup)
 
 
-    pygame.draw.circle(screen, (0, 0, 255), (25, 25), 50)
+    screen.blit(PORTAL, (-45,-5))
 
     for sprite in all_sprites_list:
         screen.blit(sprite.image, sprite.rect)
@@ -341,5 +283,3 @@ while running:
     pygame.display.update()
 
 pygame.quit()
-    
-
