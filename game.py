@@ -6,39 +6,16 @@ import time
 from config import *
 from classes import *
 
+# starts pygame
 pygame.init()
 
 
-SURFACE_COLOR = (167, 255, 100)
-WIDTH = 500
-HEIGHT = 500
-
-def min(a, b):
-    if a < b:
-        return a
-    else:
-        return b
-
-
-
-jumps = 1
-
-is_hidden = False
-
-level = 1
-
-score = 0
-
-size = (WIDTH, HEIGHT)
-
-clock = pygame.time.Clock()
-
-screen = pygame.display.set_mode(SCREEN_SIZE)
-
-time = 0
-
+#defines player, makes the all_sprites_list, makes the sublists for the other classes
+player = Player(PLAYER, 5, False)
 
 all_sprites_list = pygame.sprite.Group()
+
+all_sprites_list.add(player)
 
 guards_list = pygame.sprite.Group()
 
@@ -46,49 +23,57 @@ bushes_list = pygame.sprite.Group()
 
 powerups_list = pygame.sprite.Group()
 
-player = Player(PLAYER, 3, False)
 
-for i in range(3):
-    if i < 2:
-        guard = Guard(GUARD, 0)
-        guard.rect.x = random.randint(200, 350)
-        guard.rect.y = random.randint(200, 350)
+# minimum helper function
+def min(a, b):
+    if a < b:
+        return a
     else:
-        guard = Guard(GUARD, 0)
-        guard.rect.x = random.randint(50, 200)
-        guard.rect.y = random.randint(50, 200)
-    guards_list.add(guard)
-    all_sprites_list.add(guard)
+        return b
 
-for i in range(2):
-    if i == 0:
-        powerup = Popwerup(FIRENIP, "nip")
-        powerup.rect.x = random.randint(200, 350)
-        powerup.rect.y = random.randint(200, 350)
-    else:
-        powerup = Popwerup(FIREJUG, "jug")
-        powerup.rect.x = random.randint(50, 200)
-        powerup.rect.y = random.randint(50, 200)
-    powerups_list.add(powerup)
-    all_sprites_list.add(powerup)
+#helper function to generate a level
+def generate_level(level):              
+        player.rect.x = 1200
+        player.rect.y = 650
 
-bush1 = Bush(BUSH)
+        player.speed = 5
 
+        player.jugged = False
 
-player.rect.x = 450
-player.rect.y = 450
+        for i in range(min(level + 2, 5)):
+            bush = Bush(BUSH)
+            bush.rect.x = random.randint(200, 1000)
+            bush.rect.y = random.randint(100, 500)
+            all_sprites_list.add(bush)
+            bushes_list.add(bush)
 
+        for i in range(level + 2):
+            guard = Guard(GUARD, 0)
+            guard.rect.x = random.randint(0, 1000)
+            if i < (level + 3)/2:
+                guard.rect.y = random.randint(360, 500)
+            else:
+                guard.rect.y = random.randint(50, 360)
+            guards_list.add(guard)
+            all_sprites_list.add(guard)
 
-bush1.rect.x = random.randint(50, 350)
-bush1.rect.y = random.randint(50, 350)
+        for i in range(2):
+            if i == 0:
+                powerup = Powerup(FIRENIP, "nip")
+                powerup.rect.x = random.randint(690, 1100)
+                powerup.rect.y = random.randint(360, 670)
+            else:
+                powerup = Powerup(FIREJUG, "jug")
+                powerup.rect.x = random.randint(160, 690)
+                powerup.rect.y = random.randint(160, 360)
+            powerups_list.add(powerup)
+            all_sprites_list.add(powerup)
 
+#sets initial state of the game, such as the number of jumps the player has,
+#whether the player is hidden, the level, the score, the time, and the initial sprites, etc
+jumps = 1
 
-all_sprites_list.add(player)
-all_sprites_list.add(bush1)
-
-bushes_list.add(bush1)
-
-running = True
+is_hidden = False
 
 move = {}
 move["up"] = False
@@ -96,22 +81,94 @@ move["down"] = False
 move["left"] = False
 move["right"] = False
 
+level = 1
+
+generate_level(level)
+
+score = 0
+
+clock = pygame.time.Clock()
+
+screen = pygame.display.set_mode(SCREEN_SIZE)
+
+time = 0
+
 jug_time = 0
 
+
+#sets directions to true so that the directions page is displayed
+#sets running and End to false so the game does not display
+directions = True
+
+running = False
+
+End = False
+
+#instructions for instructions screen
+instructions = ["Directions", "Get to the top left", "Avoid the guards", "Use WASD to move", "Use arrowkeys to teleport", "Hide from guards in bushes", "Get the small potion to gain a speed boost", "Get the big potion to briefly enter Firelord Mode", "Gain a point for completing a level", "Gain points for eating guards in Firelord Mode", "Press any key to start"]
+
+font1 = pygame.font.SysFont(pygame.font.get_default_font(), 100)
+
+font2 = pygame.font.SysFont(pygame.font.get_default_font(), 50)
+
+font3 = pygame.font.SysFont(pygame.font.get_default_font(), 150)
+
+
+#Directions text page; loops over directions list and displays each member at new line.  
+#Exit if you press the exit button, transitions to actual game if you press any key
+while directions:
+    screen.fill((0, 0, 0))
+    pygame.font.init() 
+    for i in range(len(instructions)):
+        if i == 0:
+            text_surface = font1.render(instructions[i], False, (0, 255, 0))
+            screen.blit(text_surface, (500, 0))
+        elif i == 1:
+            text_surface = font2.render(instructions[i], False, (0, 255, 0))
+            screen.blit(text_surface, (0, 100))
+        elif i < len(instructions) - 1:
+            text_surface = font2.render(instructions[i], False, (0, 255, 0))
+            screen.blit(text_surface, (0, 50 + 50 * i))
+        else:
+            text_surface = font1.render(instructions[i], False, (0, 255, 0))
+            screen.blit(text_surface, (300, 100 + 50 * i))
+
+
+    for event in pygame.event.get():
+        if event.type == pygame.KEYDOWN:
+            running = True
+            directions = False
+            break
+        if event.type == pygame.QUIT:
+            directions = False
+            running = False
+            End = False
+    pygame.display.update()
+
+
+#actual game
 while running:
-    pygame.display.set_caption(f'Level: {level}           Jumps: {jumps}          Score: {score}        Firelord Mode: {str(player.jugged)}')
+
+    #clock tick
     clock.tick(30)
+
+    #time increments
     time += 1
+    
     jug_time += 1
     
+    #fills the screen
     screen.blit(BACKGROUND, (0, 0))
+
+    #detection of inputs
     for event in pygame.event.get():
+        #exits if you press exit
         if event.type == pygame.QUIT:
             running = False
+            End = False
 
+        #Detection of keypresses, and implementation of teleport ability
         if event.type == pygame.KEYDOWN:
-            # if keydown event happened
-            # than printing a string to output
             if event.key == pygame.K_w:
                 move["up"] = True
             if event.key == pygame.K_s:
@@ -121,22 +178,20 @@ while running:
             if event.key == pygame.K_a:
                 move["left"] = True
             if event.key == pygame.K_UP and jumps > 0:
-                player.rect.y -= 30
+                player.rect.y -= 120
                 jumps -= 1
             if event.key == pygame.K_DOWN and jumps > 0:
-                player.rect.y += 30
+                player.rect.y += 120
                 jumps -= 1
             if event.key == pygame.K_RIGHT and jumps > 0:
-                player.rect.x += 30
+                player.rect.x += 120
                 jumps -= 1
             if event.key == pygame.K_LEFT and jumps > 0:
-                player.rect.x -= 30
+                player.rect.x -= 120
                 jumps -= 1
 
-
+        #detection of key releases
         if event.type == pygame.KEYUP:
-            # if keydown event happened
-            # than printing a string to output
             if event.key == pygame.K_w:
                 move["up"] = False
             if event.key == pygame.K_s:
@@ -157,82 +212,90 @@ while running:
         player.rect.x -= player.speed
 
 
-    if (player.rect.x > WIDTH):
-        player.rect.x = WIDTH
+    #makes sure the player doesn't go off the screen
+    if (player.rect.x > SCREEN_WIDTH):
+        player.rect.x = SCREEN_WIDTH
     if (player.rect.x < 0):
         player.rect.x = 0
-    if (player.rect.y > HEIGHT):
-        player.rect.y = HEIGHT
+    if (player.rect.y > SCREEN_HEIGHT):
+        player.rect.y = SCREEN_HEIGHT
     if (player.rect.y < 0):
         player.rect.y = 0
 
+    #sets the hidden variable to true iff the player is in a bush
     for bush in bushes_list:
         if pygame.sprite.collide_rect(player, bush):
             is_hidden = True
         else:
             is_hidden = False
 
+    #loops over the guards, making them bounce back and forth by default 
+    #guards approach the player if the player comes within a certain area of them
+    #go to End screen if the guard contacts the player when player not in firelord mode
+    #kills the guard and gives the player points if the player contacts them in firelord mode
     for guard in guards_list:
-        if guard.rect.x > 475 or guard.rect.x < 25:
+        if guard.rect.x > SCREEN_WIDTH or guard.rect.x < 0:
             guard.bounces += 1
 
-        if ((abs(guard.rect.x - player.rect.x) < 100) and (abs(guard.rect.y - player.rect.y) < 100) and not is_hidden):
+        if ((abs(guard.rect.x - player.rect.x) < 150) and (abs(guard.rect.y - player.rect.y) < 150) and not is_hidden and not player.jugged):
             if guard.rect.x < player.rect.x and guard.rect.y < player.rect.y:
-                guard.rect.x += 5
-                guard.rect.y += 5
+                guard.rect.x += 15
+                guard.rect.y += 15
             elif guard.rect.x < player.rect.x and guard.rect.y > player.rect.y:
-                guard.rect.x += 5
-                guard.rect.y -= 5
+                guard.rect.x += 15
+                guard.rect.y -= 15
             elif guard.rect.x > player.rect.x and guard.rect.y < player.rect.y:
-                guard.rect.x -= 5
-                guard.rect.y += 5
+                guard.rect.x -= 15
+                guard.rect.y += 15
             else:
-                guard.rect.x -= 5
-                guard.rect.x -= 5
+                guard.rect.x -= 15
+                guard.rect.x -= 15
         else:
             if guard.bounces % 2 == 0:
-                guard.rect.x += 3
+                guard.rect.x += 10
             else:
-                guard.rect.x -= 3
+                guard.rect.x -= 10
                 
         if pygame.sprite.collide_rect(guard, player) and not player.jugged:
             running = False
+            End = True
+            break
 
         if pygame.sprite.collide_rect(guard, player) and player.jugged:
             pygame.sprite.Sprite.kill(guard)
             score += 1
 
 
+    #detects if player has gotten powerups, and if so kills them and changes the relevant variables
     for powerup in powerups_list:
         if pygame.sprite.collide_rect(player, powerup):
             if powerup.type == "jug":
                 jug_time = 1
                 player.jugged = True
             else:
-                player.speed = 5
+                player.speed = 10
             pygame.sprite.Sprite.kill(powerup)
 
+    #restores jump power after a certain duration if the player has no jumps
     if time % 350 == 0 and jumps == 0:
         jumps += 1
         
-    if jug_time % 150 == 0:
+    #ends the firelord mode after a certain period of time
+    if jug_time % 100 == 0:
         player.jugged = False
 
+    #changes the player's image if in firelord mode
     if player.jugged:
         player.image = PLAYER_JUGGED
     else:
         player.image = PLAYER
 
-    if player.rect.x < 50 and player.rect.y < 50:
-        player.rect.x = 450
-        player.rect.y = 450
-            
-        player.speed = 3
-        player.jugged = False
+    #resets the level with an additional guard if the player gets to the end
+    if player.rect.x < 150 and player.rect.y < 150:
+
+        score += level
 
         level += 1
-
-        score += 1
 
         for guard in guards_list:
             pygame.sprite.Sprite.kill(guard)
@@ -243,129 +306,41 @@ while running:
         for powerup in powerups_list:
             pygame.sprite.Sprite.kill(powerup)
 
-        for i in range(min(level, 3)):
-            bush = Bush(BUSH)
-            bush.rect.x = random.randint(50, 350)
-            bush.rect.y = random.randint(50, 350)
-            all_sprites_list.add(bush)
-            bushes_list.add(bush)
+        generate_level(level)
 
-        for i in range(level + 2):
-            if i < (level + 3)/2:
-                guard = Guard(GUARD, 0)
-                guard.rect.x = random.randint(200, 350)
-                guard.rect.y = random.randint(200, 350)
-            else:
-                guard = Guard(GUARD, 0)
-                guard.rect.x = random.randint(50, 200)
-                guard.rect.y = random.randint(50, 200)
-            guards_list.add(guard)
-            all_sprites_list.add(guard)
-
-        for i in range(2):
-            if i == 0:
-                powerup = Popwerup(FIRENIP, "nip")
-                powerup.rect.x = random.randint(200, 350)
-                powerup.rect.y = random.randint(200, 350)
-            else:
-                powerup = Popwerup(FIREJUG, "jug")
-                powerup.rect.x = random.randint(50, 200)
-                powerup.rect.y = random.randint(50, 200)
-            powerups_list.add(powerup)
-            all_sprites_list.add(powerup)
-
-
+    #draws everything and updates everything
+    #including text displaying info about game in top right hand corner
     screen.blit(PORTAL, (-45,-5))
 
     for sprite in all_sprites_list:
         screen.blit(sprite.image, sprite.rect)
 
+    
+    Level_display = font2.render(f"Level: {level}", False, (0, 0, 0))
+    Score_display = font2.render(f"Score: {score}", False, (0, 0, 0))
+    Teleports_display = font2.render(f"Teleports: {jumps}", False, (0, 0, 0))
+
+    screen.blit(Level_display, (1125, 25))
+    screen.blit(Score_display, (1125, 75))
+    screen.blit(Teleports_display, (1075, 125))
+
+
     pygame.display.update()
 
+#Defines end screen, which tells the player their final score
+while End:
+    screen.fill((0, 0, 0))
+    for i in range(3):
+        if i == 0:
+            text_surface = font3.render(f"YOU LOSE", False, (255, 0, 0))
+            screen.blit(text_surface, (400, 50))
+        else: 
+            text_surface = font3.render(f"SCORE: {score}", False, (255, 0, 0))
+            screen.blit(text_surface, (400, 300))
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            End = False
+    pygame.display.update()
+
+#quits game once out of loop
 pygame.quit()
-
-
-
-CONFIG FILE:
-    
-    import pygame
-
-# Global screen variables
-SCREEN_WIDTH = 1280
-SCREEN_HEIGHT = 720
-SCREEN_SIZE = (SCREEN_WIDTH, SCREEN_HEIGHT)
-
-POWERUP_SIZE = 75
-CHARACTER_SIZE = 50
-GUARD_SIZE = 40
-BUSH_SIZE = 150
-FPS = 1
-
-PLAYER = pygame.transform.scale(pygame.image.load("images/player.png"), (CHARACTER_SIZE, CHARACTER_SIZE))
-PLAYER_NIPPED = pygame.transform.scale(pygame.image.load("images/nipped.png"), (CHARACTER_SIZE, CHARACTER_SIZE))
-PLAYER_JUGGED = pygame.transform.scale(pygame.image.load("images/jugged.png"), (CHARACTER_SIZE, CHARACTER_SIZE))
-GUARD = pygame.transform.scale(pygame.image.load("images/guard.png"), (GUARD_SIZE, GUARD_SIZE))
-BUSH = pygame.transform.scale(pygame.image.load("images/bush.png"), (BUSH_SIZE, BUSH_SIZE))
-FIRENIP = pygame.transform.scale(pygame.image.load("images/firenip.png"), (POWERUP_SIZE, POWERUP_SIZE))
-FIREJUG = pygame.transform.scale(pygame.image.load("images/firejug.png"), (POWERUP_SIZE, POWERUP_SIZE))
-BACKGROUND = pygame.image.load("images/tile_background.png")
-PORTAL = pygame.image.load("images/portal.png")
-
-
-
-CLASSES FILE:
-    import pygame
-from config import *
-
-class Player(pygame.sprite.Sprite):
-    # Constructor. Pass in the color of the block,
-    # and its x and y position
-    def __init__(self, image, speed, jugged):
-       # Call the parent class (Sprite) constructor
-       pygame.sprite.Sprite.__init__(self)
-       # Create an image of the block, and fill it with a color.
-       # This could also be an image loaded from the disk.
-       self.image = image
-       self.speed = speed
-       self.jugged = jugged
-
-       # Fetch the rectangle object that has the dimensions of the image
-       # Update the position of this object by setting the values of rect.x and rect.y
-       self.rect = self.image.get_rect()
-
-class Guard(pygame.sprite.Sprite):
-    def __init__(self, image, bounces):
-       pygame.sprite.Sprite.__init__(self)
-       self.image = image
-
-       self.rect = self.image.get_rect()
-       self.bounces = bounces
-
-class Bush(pygame.sprite.Sprite):
-    # Constructor. Pass in the color of the block,
-    # and its x and y position
-    def __init__(self, image):
-       # Call the parent class (Sprite) constructor
-       pygame.sprite.Sprite.__init__(self)
-       # Create an image of the block, and fill it with a color.
-       # This could also be an image loaded from the disk.
-       self.image = image
-
-       # Fetch the rectangle object that has the dimensions of the image
-       # Update the position of this object by setting the values of rect.x and rect.y
-       self.rect = self.image.get_rect()
-
-class Powerup(pygame.sprite.Sprite):
-    # Constructor. Pass in the color of the block,
-    # and its x and y position
-    def __init__(self, image, type):
-       # Call the parent class (Sprite) constructor
-       pygame.sprite.Sprite.__init__(self)
-       # Create an image of the block, and fill it with a color.
-       # This could also be an image loaded from the disk.
-       self.image = image
-       self.type = type
-
-       # Fetch the rectangle object that has the dimensions of the image
-       # Update the position of this object by setting the values of rect.x and rect.y
-       self.rect = self.image.get_rect()
