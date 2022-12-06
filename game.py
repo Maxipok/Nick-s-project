@@ -13,8 +13,15 @@ GUARD_COLOR = (255, 0, 0)
 BUSH_COLOR = (0, 255, 0)
 NIP_COLOR = (150, 90, 0)
 JUG_COLOR = (255, 150, 0)
+FIRELORD_COLOR = (255, 150, 0)
 WIDTH = 500
 HEIGHT = 500
+
+def min(a, b):
+    if a < b:
+        return a
+    else:
+        return b
 
 class Player(pygame.sprite.Sprite):
     # Constructor. Pass in the color of the block,
@@ -74,8 +81,13 @@ class Popwerup(pygame.sprite.Sprite):
        self.rect = self.image.get_rect()
 
 jumps = 1
+
 is_hidden = False
+
 level = 1
+
+score = 0
+
 size = (WIDTH, HEIGHT)
 
 clock = pygame.time.Clock()
@@ -84,7 +96,6 @@ screen = pygame.display.set_mode(size)
 
 time = 0
 
-pygame.display.set_caption(f'Level: {level}')
 
 all_sprites_list = pygame.sprite.Group()
 
@@ -95,20 +106,28 @@ bushes_list = pygame.sprite.Group()
 powerups_list = pygame.sprite.Group()
 
 player = Player(PLAYER_COLOR, 10, 10, 3, False)
+
 for i in range(3):
-    guard = Guard(GUARD_COLOR, 10, 10, 0)
-    guard.rect.x = random.randint(50, 350)
-    guard.rect.y = random.randint(50, 350)
+    if i < 2:
+        guard = Guard(GUARD_COLOR, 10, 10, 0)
+        guard.rect.x = random.randint(200, 350)
+        guard.rect.y = random.randint(200, 350)
+    else:
+        guard = Guard(GUARD_COLOR, 10, 10, 0)
+        guard.rect.x = random.randint(50, 200)
+        guard.rect.y = random.randint(50, 200)
     guards_list.add(guard)
     all_sprites_list.add(guard)
 
 for i in range(2):
     if i == 0:
         powerup = Popwerup(NIP_COLOR, 20, 20, "nip")
+        powerup.rect.x = random.randint(200, 350)
+        powerup.rect.y = random.randint(200, 350)
     else:
         powerup = Popwerup(JUG_COLOR, 20, 20, "jug")
-    powerup.rect.x = random.randint(50, 350)
-    powerup.rect.y = random.randint(50, 350)
+        powerup.rect.x = random.randint(50, 200)
+        powerup.rect.y = random.randint(50, 200)
     powerups_list.add(powerup)
     all_sprites_list.add(powerup)
 
@@ -117,7 +136,6 @@ bush1 = Bush(BUSH_COLOR, 30, 30)
 
 player.rect.x = 450
 player.rect.y = 450
-
 
 
 bush1.rect.x = random.randint(50, 350)
@@ -137,10 +155,13 @@ move["down"] = False
 move["left"] = False
 move["right"] = False
 
+jug_time = 0
 
 while running:
+    pygame.display.set_caption(f'Level: {level}           Jumps: {jumps}          Score: {score}        Firelord Mode: {str(player.jugged)}')
     clock.tick(30)
     time += 1
+    jug_time += 1
     
     screen.fill(SURFACE_COLOR)
     for event in pygame.event.get():
@@ -232,48 +253,85 @@ while running:
                 guard.rect.x += 3
             else:
                 guard.rect.x -= 3
+                
+        if pygame.sprite.collide_rect(guard, player) and not player.jugged:
+            running = False
+
+        if pygame.sprite.collide_rect(guard, player) and player.jugged:
+            pygame.sprite.Sprite.kill(guard)
+            score += 1
+
 
     for powerup in powerups_list:
         if pygame.sprite.collide_rect(player, powerup):
             if powerup.type == "jug":
+                jug_time = 1
                 player.jugged = True
             else:
                 player.speed = 5
             pygame.sprite.Sprite.kill(powerup)
 
-        if pygame.sprite.collide_rect(guard, player):
-            running = False
+    if time % 350 == 0 and jumps == 0:
+        jumps += 1
+        
+    if jug_time % 150 == 0:
+        player.jugged = False
 
-        if time % 500 == 0 and jumps == 0:
-            jumps += 1
+    if player.jugged:
+        player.image = pygame.Surface([10, 10])
+        player.image.fill(FIRELORD_COLOR)
 
-        if player.rect.x < 50 and player.rect.y < 50:
-            level += 1
+    if player.rect.x < 50 and player.rect.y < 50:
+        player.rect.x = 450
+        player.rect.y = 450
+            
+        player.speed = 3
+        player.jugged = False
 
-            new_guard = Guard(GUARD_COLOR, 10, 10, 0)
+        level += 1
 
-            new_guard.rect.x = random.randint(50, 350)
-            new_guard.rect.y = random.randint(50, 350)
+        score += 1
 
-            all_sprites_list.add(new_guard)
+        for guard in guards_list:
+            pygame.sprite.Sprite.kill(guard)
+    
+        for bush in bushes_list:
+            pygame.sprite.Sprite.kill(bush)
 
-            guards_list.add(new_guard)
+        for powerup in powerups_list:
+            pygame.sprite.Sprite.kill(powerup)
 
-            if level < 4:
-                new_bush = Bush(BUSH_COLOR, 30, 30)
-                new_bush.rect.x = random.randint(50, 350)
-                new_bush.rect.y = random.randint(50, 350)
+        for i in range(min(level, 3)):
+            bush = Bush(BUSH_COLOR, 30, 30)
+            bush.rect.x = random.randint(50, 350)
+            bush.rect.y = random.randint(50, 350)
+            all_sprites_list.add(bush)
+            bushes_list.add(bush)
 
-                all_sprites_list.add(new_bush)
-                bushes_list.add(new_bush)
+        for i in range(level + 2):
+            if i < (level + 3)/2:
+                guard = Guard(GUARD_COLOR, 10, 10, 0)
+                guard.rect.x = random.randint(200, 350)
+                guard.rect.y = random.randint(200, 350)
+            else:
+                guard = Guard(GUARD_COLOR, 10, 10, 0)
+                guard.rect.x = random.randint(50, 200)
+                guard.rect.y = random.randint(50, 200)
+            guards_list.add(guard)
+            all_sprites_list.add(guard)
 
-            for guard in all_sprites_list:
-                guard.rect.x = random.randint(50, 350)
-                guard.rect.y = random.randint(50, 350)
+        for i in range(2):
+            if i == 0:
+                powerup = Popwerup(NIP_COLOR, 20, 20, "nip")
+                powerup.rect.x = random.randint(200, 350)
+                powerup.rect.y = random.randint(200, 350)
+            else:
+                powerup = Popwerup(JUG_COLOR, 20, 20, "jug")
+                powerup.rect.x = random.randint(50, 200)
+                powerup.rect.y = random.randint(50, 200)
+            powerups_list.add(powerup)
+            all_sprites_list.add(powerup)
 
-            player.rect.x = 450
-            player.rect.y = 450
-            player.speed = 3
 
     pygame.draw.circle(screen, (0, 0, 255), (25, 25), 50)
 
