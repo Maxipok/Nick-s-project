@@ -11,20 +11,22 @@ PLAYER_COLOR = (0, 0, 0)
 SURFACE_COLOR = (167, 255, 100)
 GUARD_COLOR = (255, 0, 0)
 BUSH_COLOR = (0, 255, 0)
+NIP_COLOR = (150, 90, 0)
+JUG_COLOR = (255, 150, 0)
 WIDTH = 500
 HEIGHT = 500
 
 class Player(pygame.sprite.Sprite):
     # Constructor. Pass in the color of the block,
     # and its x and y position
-    def __init__(self, color, width, height, nipped, jugged):
+    def __init__(self, color, width, height, speed, jugged):
        # Call the parent class (Sprite) constructor
        pygame.sprite.Sprite.__init__(self)
        # Create an image of the block, and fill it with a color.
        # This could also be an image loaded from the disk.
        self.image = pygame.Surface([width, height])
        self.image.fill(color)
-       self.nipped = nipped
+       self.speed = speed
        self.jugged = jugged
 
        # Fetch the rectangle object that has the dimensions of the image
@@ -58,14 +60,14 @@ class Bush(pygame.sprite.Sprite):
 class Popwerup(pygame.sprite.Sprite):
     # Constructor. Pass in the color of the block,
     # and its x and y position
-    def __init__(self, color, width, height, taken):
+    def __init__(self, color, width, height, type):
        # Call the parent class (Sprite) constructor
        pygame.sprite.Sprite.__init__(self)
        # Create an image of the block, and fill it with a color.
        # This could also be an image loaded from the disk.
        self.image = pygame.Surface([width, height])
        self.image.fill(color)
-       self.taken = taken
+       self.type = type
 
        # Fetch the rectangle object that has the dimensions of the image
        # Update the position of this object by setting the values of rect.x and rect.y
@@ -82,7 +84,7 @@ screen = pygame.display.set_mode(size)
 
 time = 0
 
-pygame.display.set_caption(f'Level: {level}, Seconds: {time/100}')
+pygame.display.set_caption(f'Level: {level}')
 
 all_sprites_list = pygame.sprite.Group()
 
@@ -92,13 +94,23 @@ bushes_list = pygame.sprite.Group()
 
 powerups_list = pygame.sprite.Group()
 
-player = Player(PLAYER_COLOR, 10, 10, False, False)
+player = Player(PLAYER_COLOR, 10, 10, 3, False)
 for i in range(3):
     guard = Guard(GUARD_COLOR, 10, 10, 0)
     guard.rect.x = random.randint(50, 350)
     guard.rect.y = random.randint(50, 350)
     guards_list.add(guard)
     all_sprites_list.add(guard)
+
+for i in range(2):
+    if i == 0:
+        powerup = Popwerup(NIP_COLOR, 20, 20, "nip")
+    else:
+        powerup = Popwerup(JUG_COLOR, 20, 20, "jug")
+    powerup.rect.x = random.randint(50, 350)
+    powerup.rect.y = random.randint(50, 350)
+    powerups_list.add(powerup)
+    all_sprites_list.add(powerup)
 
 bush1 = Bush(BUSH_COLOR, 30, 30)
 
@@ -128,7 +140,7 @@ move["right"] = False
 
 while running:
     clock.tick(30)
-    time = pygame.time.get_ticks()
+    time += 1
     
     screen.fill(SURFACE_COLOR)
     for event in pygame.event.get():
@@ -174,13 +186,13 @@ while running:
 
     # Actually moving the player character
     if (move["up"]):
-        player.rect.y -= 3
+        player.rect.y -= player.speed
     if (move["down"]):
-        player.rect.y += 3
+        player.rect.y += player.speed
     if (move["right"]):
-        player.rect.x += 3
+        player.rect.x += player.speed
     if (move["left"]):
-        player.rect.x -= 3
+        player.rect.x -= player.speed
 
 
     if (player.rect.x > WIDTH):
@@ -221,10 +233,18 @@ while running:
             else:
                 guard.rect.x -= 3
 
+    for powerup in powerups_list:
+        if pygame.sprite.collide_rect(player, powerup):
+            if powerup.type == "jug":
+                player.jugged = True
+            else:
+                player.speed = 5
+            pygame.sprite.Sprite.kill(powerup)
+
         if pygame.sprite.collide_rect(guard, player):
             running = False
 
-        if pygame.time.get_ticks() % 1000 == 0 and jumps == 0:
+        if time % 500 == 0 and jumps == 0:
             jumps += 1
 
         if player.rect.x < 50 and player.rect.y < 50:
@@ -253,6 +273,7 @@ while running:
 
             player.rect.x = 450
             player.rect.y = 450
+            player.speed = 3
 
     pygame.draw.circle(screen, (0, 0, 255), (25, 25), 50)
 
