@@ -1,4 +1,5 @@
 import pygame
+from pygame.locals import *
 import numpy
 import random
 import time
@@ -16,13 +17,15 @@ HEIGHT = 500
 class Player(pygame.sprite.Sprite):
     # Constructor. Pass in the color of the block,
     # and its x and y position
-    def __init__(self, color, width, height):
+    def __init__(self, color, width, height, nipped, jugged):
        # Call the parent class (Sprite) constructor
        pygame.sprite.Sprite.__init__(self)
        # Create an image of the block, and fill it with a color.
        # This could also be an image loaded from the disk.
        self.image = pygame.Surface([width, height])
        self.image.fill(color)
+       self.nipped = nipped
+       self.jugged = jugged
 
        # Fetch the rectangle object that has the dimensions of the image
        # Update the position of this object by setting the values of rect.x and rect.y
@@ -55,13 +58,14 @@ class Bush(pygame.sprite.Sprite):
 class Popwerup(pygame.sprite.Sprite):
     # Constructor. Pass in the color of the block,
     # and its x and y position
-    def __init__(self, color, width, height):
+    def __init__(self, color, width, height, taken):
        # Call the parent class (Sprite) constructor
        pygame.sprite.Sprite.__init__(self)
        # Create an image of the block, and fill it with a color.
        # This could also be an image loaded from the disk.
        self.image = pygame.Surface([width, height])
        self.image.fill(color)
+       self.taken = taken
 
        # Fetch the rectangle object that has the dimensions of the image
        # Update the position of this object by setting the values of rect.x and rect.y
@@ -81,9 +85,12 @@ guards_list = pygame.sprite.Group()
 
 bushes_list = pygame.sprite.Group()
 
+powerups_list = pygame.sprite.Group()
+
 player = Player(PLAYER_COLOR, 10, 10)
 guard1 = Guard(GUARD_COLOR, 10, 10, 0)
 bush1 = Bush(BUSH_COLOR, 30, 30)
+
 
 player.rect.x = 450
 player.rect.y = 450
@@ -94,9 +101,11 @@ guard1.rect.y = random.randint(50, 350)
 bush1.rect.x = random.randint(50, 350)
 bush1.rect.y = random.randint(50, 350)
 
+
 all_sprites_list.add(player)
 all_sprites_list.add(guard1)
 all_sprites_list.add(bush1)
+
 
 guards_list.add(guard1)
 
@@ -105,33 +114,77 @@ bushes_list.add(bush1)
 running = True
 clock = pygame.time.Clock()
 
+move = {}
+move["up"] = False
+move["down"] = False
+move["left"] = False
+move["right"] = False
+
 while running:
     screen.fill(SURFACE_COLOR)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-        elif event.type == pygame.K_w and player.rect.y < 500:
-            player.rect.y += 1
-        elif event.type == pygame.K_s and player.rect.y > 0:
-            player.rect.y -= 1
-        elif event.type == pygame.K_d and player.rect.x < 500:
-            player.rect.x += 1
-        elif event.type == pygame.K_a and player.rect.x > 0:
-            player.rect.x -= 1
-        elif event.type == pygame.K_UP and player.rect.y < 470 and jumps > 0:
-            player.rect.y += 30
-            jumps -= 1
-        elif event.type == pygame.K_DOWN and player.rect.y > 30 and jumps > 0:
-            player.rect.y -= 30
-            jumps -= 1
-        elif event.type == pygame.K_RIGHT and player.rect.x < 470 and jumps > 0:
-            player.rect.x += 30
-            jumps -= 1
-        elif event.type == pygame.K_LEFT and player.rect.x > 30 and jumps > 0:
-            player.rect.x -= 30
-            jumps -= 1
-        else:
-            player.rect.x += 0
+            for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+
+        if event.type == pygame.KEYDOWN:
+            # if keydown event happened
+            # than printing a string to output
+            if event.key == pygame.K_w:
+                move["up"] = True
+            if event.key == pygame.K_s:
+                move["down"] = True
+            if event.key == pygame.K_d:
+                move["right"] = True
+            if event.key == pygame.K_a:
+                move["left"] = True
+            if event.key == pygame.K_UP and jumps > 0:
+                player.rect.y += 30
+                jumps -= 1
+            if event.key == pygame.K_DOWN and jumps > 0:
+                player.rect.y -= 30
+                jumps -= 1
+            if event.key == pygame.K_RIGHT and jumps > 0:
+                player.rect.x += 30
+                jumps -= 1
+            if event.key == pygame.K_LEFT and jumps > 0:
+                player.rect.x -= 30
+                jumps -= 1
+
+
+        if event.type == pygame.KEYUP:
+            # if keydown event happened
+            # than printing a string to output
+            if event.key == pygame.K_w:
+                move["up"] = False
+            if event.key == pygame.K_s:
+                move["down"] = False
+            if event.key == pygame.K_d:
+                move["right"] = False
+            if event.key == pygame.K_a:
+                move["left"] = False
+
+    # Actually moving the player character
+    if (move["up"]):
+        player.rect.y -= 2
+    if (move["down"]):
+        player.rect.y += 2
+    if (move["right"]):
+        player.rect.x += 2
+    if (move["left"]):
+        player.rect.x -= 2
+
+
+    if (player.rect.x > WIDTH - player.width):
+        player.rect.x = WIDTH - player.width
+    if (player.rect.x < 0):
+        player.rect.x = 0
+    if (player.rect.y > HEIGHT - player.height):
+        player.rect.y = HEIGHT - player.height
+    if (player.rect.y < 0):
+        player.rect.y = 0
 
     for bush in bushes_list:
         if pygame.sprite.collide_rect(player, bush):
@@ -145,22 +198,22 @@ while running:
 
         if ((abs(guard.rect.x - player.rect.x) < 100) and (abs(guard.rect.y - player.rect.y) < 100) and not is_hidden):
             if guard.rect.x < player.rect.x and guard.rect.y < player.rect.y:
-                guard.rect.x += 2
-                guard.rect.y += 2
+                guard.rect.x += 4
+                guard.rect.y += 4
             elif guard.rect.x < player.rect.x and guard.rect.y > player.rect.y:
-                guard.rect.x += 2
-                guard.rect.y -= 2
+                guard.rect.x += 4
+                guard.rect.y -= 4
             elif guard.rect.x > player.rect.x and guard.rect.y < player.rect.y:
-                guard.rect.x -= 2
-                guard.rect.y += 2
+                guard.rect.x -= 4
+                guard.rect.y += 4
             else:
-                guard.rect.x -= 2
-                guard.rect.x -= 2
+                guard.rect.x -= 4
+                guard.rect.x -= 4
         else:
             if guard.bounces % 2 == 0:
-                guard.rect.x += 1
+                guard.rect.x += 2
             else:
-                guard.rect.x -= 1
+                guard.rect.x -= 2
 
         if pygame.sprite.collide_rect(guard, player):
             running = False
@@ -195,13 +248,12 @@ while running:
             player.rect.x = 450
             player.rect.y = 450
 
-    all_sprites_list.draw(screen)
-
     pygame.draw.circle(screen, (0, 0, 255), (25, 25), 50)
 
-    pygame.display.flip()
+    all_sprites_list.draw(screen)
 
-    clock.tick(60)
+    clock.tick(30)
+    pygame.display.flip()
 
 pygame.quit()
     
