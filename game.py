@@ -87,7 +87,7 @@ bushes_list = pygame.sprite.Group()
 
 powerups_list = pygame.sprite.Group()
 
-player = Player(PLAYER_COLOR, 10, 10)
+player = Player(PLAYER_COLOR, 10, 10, False, False)
 guard1 = Guard(GUARD_COLOR, 10, 10, 0)
 bush1 = Bush(BUSH_COLOR, 30, 30)
 
