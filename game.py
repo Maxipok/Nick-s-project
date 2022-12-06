@@ -76,8 +76,13 @@ is_hidden = False
 level = 1
 size = (WIDTH, HEIGHT)
 
+clock = pygame.time.Clock()
+
 screen = pygame.display.set_mode(size)
-pygame.display.set_caption(f'Level: {level}')
+
+time = 0
+
+pygame.display.set_caption(f'Level: {level}, Seconds: {time/100}')
 
 all_sprites_list = pygame.sprite.Group()
 
@@ -88,31 +93,31 @@ bushes_list = pygame.sprite.Group()
 powerups_list = pygame.sprite.Group()
 
 player = Player(PLAYER_COLOR, 10, 10, False, False)
-guard1 = Guard(GUARD_COLOR, 10, 10, 0)
+for i in range(3):
+    guard = Guard(GUARD_COLOR, 10, 10, 0)
+    guard.rect.x = random.randint(50, 350)
+    guard.rect.y = random.randint(50, 350)
+    guards_list.add(guard)
+    all_sprites_list.add(guard)
+
 bush1 = Bush(BUSH_COLOR, 30, 30)
 
 
 player.rect.x = 450
 player.rect.y = 450
 
-guard1.rect.x = random.randint(50, 350)
-guard1.rect.y = random.randint(50, 350)
+
 
 bush1.rect.x = random.randint(50, 350)
 bush1.rect.y = random.randint(50, 350)
 
 
 all_sprites_list.add(player)
-all_sprites_list.add(guard1)
 all_sprites_list.add(bush1)
-
-
-guards_list.add(guard1)
 
 bushes_list.add(bush1)
 
 running = True
-clock = pygame.time.Clock()
 
 move = {}
 move["up"] = False
@@ -120,12 +125,13 @@ move["down"] = False
 move["left"] = False
 move["right"] = False
 
+
 while running:
+    clock.tick(30)
+    time = pygame.time.get_ticks()
+    
     screen.fill(SURFACE_COLOR)
     for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-            for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
 
@@ -141,10 +147,10 @@ while running:
             if event.key == pygame.K_a:
                 move["left"] = True
             if event.key == pygame.K_UP and jumps > 0:
-                player.rect.y += 30
+                player.rect.y -= 30
                 jumps -= 1
             if event.key == pygame.K_DOWN and jumps > 0:
-                player.rect.y -= 30
+                player.rect.y += 30
                 jumps -= 1
             if event.key == pygame.K_RIGHT and jumps > 0:
                 player.rect.x += 30
@@ -168,21 +174,21 @@ while running:
 
     # Actually moving the player character
     if (move["up"]):
-        player.rect.y -= 2
+        player.rect.y -= 3
     if (move["down"]):
-        player.rect.y += 2
+        player.rect.y += 3
     if (move["right"]):
-        player.rect.x += 2
+        player.rect.x += 3
     if (move["left"]):
-        player.rect.x -= 2
+        player.rect.x -= 3
 
 
-    if (player.rect.x > WIDTH - player.width):
-        player.rect.x = WIDTH - player.width
+    if (player.rect.x > WIDTH):
+        player.rect.x = WIDTH
     if (player.rect.x < 0):
         player.rect.x = 0
-    if (player.rect.y > HEIGHT - player.height):
-        player.rect.y = HEIGHT - player.height
+    if (player.rect.y > HEIGHT):
+        player.rect.y = HEIGHT
     if (player.rect.y < 0):
         player.rect.y = 0
 
@@ -198,22 +204,22 @@ while running:
 
         if ((abs(guard.rect.x - player.rect.x) < 100) and (abs(guard.rect.y - player.rect.y) < 100) and not is_hidden):
             if guard.rect.x < player.rect.x and guard.rect.y < player.rect.y:
-                guard.rect.x += 4
-                guard.rect.y += 4
+                guard.rect.x += 5
+                guard.rect.y += 5
             elif guard.rect.x < player.rect.x and guard.rect.y > player.rect.y:
-                guard.rect.x += 4
-                guard.rect.y -= 4
+                guard.rect.x += 5
+                guard.rect.y -= 5
             elif guard.rect.x > player.rect.x and guard.rect.y < player.rect.y:
-                guard.rect.x -= 4
-                guard.rect.y += 4
+                guard.rect.x -= 5
+                guard.rect.y += 5
             else:
-                guard.rect.x -= 4
-                guard.rect.x -= 4
+                guard.rect.x -= 5
+                guard.rect.x -= 5
         else:
             if guard.bounces % 2 == 0:
-                guard.rect.x += 2
+                guard.rect.x += 3
             else:
-                guard.rect.x -= 2
+                guard.rect.x -= 3
 
         if pygame.sprite.collide_rect(guard, player):
             running = False
@@ -250,12 +256,11 @@ while running:
 
     pygame.draw.circle(screen, (0, 0, 255), (25, 25), 50)
 
-    all_sprites_list.draw(screen)
+    for sprite in all_sprites_list:
+        screen.blit(sprite.image, sprite.rect)
 
-    clock.tick(30)
-    pygame.display.flip()
+    pygame.display.update()
 
 pygame.quit()
-    
     
 
