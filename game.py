@@ -31,7 +31,7 @@ def min(a, b):
     else:
         return b
 
-#helper function to generate a level
+#generate level helper function
 def generate_level(level):              
         player.rect.x = 1200
         player.rect.y = 650
@@ -92,26 +92,18 @@ clock = pygame.time.Clock()
 screen = pygame.display.set_mode(SCREEN_SIZE)
 
 time = 0
-
 jug_time = 0
 
+#initializes font variables for later text
+font1 = pygame.font.SysFont(pygame.font.get_default_font(), 100)
+font2 = pygame.font.SysFont(pygame.font.get_default_font(), 50)
+font3 = pygame.font.SysFont(pygame.font.get_default_font(), 150)
 
 #sets directions to true so that the directions page is displayed
 #sets running and End to false so the game does not display
 directions = True
-
 running = False
-
 End = False
-
-#instructions for instructions screen
-instructions = ["Directions", "Get to the top left", "Avoid the guards", "Use WASD to move", "Use arrowkeys to teleport", "Hide from guards in bushes", "Get the small potion to gain a speed boost", "Get the big potion to briefly enter Firelord Mode", "Gain a point for completing a level", "Gain points for eating guards in Firelord Mode", "Press any key to start"]
-
-font1 = pygame.font.SysFont(pygame.font.get_default_font(), 100)
-
-font2 = pygame.font.SysFont(pygame.font.get_default_font(), 50)
-
-font3 = pygame.font.SysFont(pygame.font.get_default_font(), 150)
 
 
 #Directions text page; loops over directions list and displays each member at new line.  
@@ -138,7 +130,6 @@ while directions:
         if event.type == pygame.KEYDOWN:
             running = True
             directions = False
-            break
         if event.type == pygame.QUIT:
             directions = False
             running = False
@@ -154,7 +145,6 @@ while running:
 
     #time increments
     time += 1
-    
     jug_time += 1
     
     #fills the screen
@@ -162,6 +152,7 @@ while running:
 
     #detection of inputs
     for event in pygame.event.get():
+
         #exits if you press exit
         if event.type == pygame.QUIT:
             running = False
@@ -223,11 +214,11 @@ while running:
         player.rect.y = 0
 
     #sets the hidden variable to true iff the player is in a bush
-    for bush in bushes_list:
-        if pygame.sprite.collide_rect(player, bush):
-            is_hidden = True
-        else:
-            is_hidden = False
+    if pygame.sprite.spritecollideany(player, bushes_list) == None:
+        is_hidden = False
+    else:
+        is_hidden = True
+
 
     #loops over the guards, making them bounce back and forth by default 
     #guards approach the player if the player comes within a certain area of them
@@ -259,7 +250,7 @@ while running:
         if pygame.sprite.collide_rect(guard, player) and not player.jugged:
             running = False
             End = True
-            break
+            
 
         if pygame.sprite.collide_rect(guard, player) and player.jugged:
             pygame.sprite.Sprite.kill(guard)
@@ -309,13 +300,11 @@ while running:
         generate_level(level)
 
     #draws everything and updates everything
-    #including text displaying info about game in top right hand corner
     screen.blit(PORTAL, (-45,-5))
 
     for sprite in all_sprites_list:
         screen.blit(sprite.image, sprite.rect)
 
-    
     Level_display = font2.render(f"Level: {level}", False, (0, 0, 0))
     Score_display = font2.render(f"Score: {score}", False, (0, 0, 0))
     Teleports_display = font2.render(f"Teleports: {jumps}", False, (0, 0, 0))
@@ -330,7 +319,7 @@ while running:
 #Defines end screen, which tells the player their final score
 while End:
     screen.fill((0, 0, 0))
-    for i in range(3):
+    for i in range(2):
         if i == 0:
             text_surface = font3.render(f"YOU LOSE", False, (255, 0, 0))
             screen.blit(text_surface, (400, 50))
